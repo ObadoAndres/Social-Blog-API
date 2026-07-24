@@ -1,14 +1,21 @@
-import startApp from './app.js';
+import { app, startApp } from './app.js';
+
 
 const PORT = process.env.PORT || 5000;
 
-startApp()
-  .then((app) => {
+// Initialize dependencies and boot server
+const bootServer = async () => {
+  try {
+    await startApp();
+   
+
     app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
+      console.log(`Server running in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
     });
-  })
-  .catch((error) => {
-    console.error('Failed to start server:', error);
+  } catch (error) {
+    console.error(`Error starting server: ${error.message}`);
     process.exit(1);
-  });
+  }
+};
+
+bootServer();

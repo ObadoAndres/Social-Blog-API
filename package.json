@@ -4,6 +4,9 @@
   "description": "Node.js Express MongoDB JWT auth backend",
   "type": "module",
   "main": "src/server.js",
+   "editor.inlineSuggest.enabled": false,
+   "chat.disableAIfeatures": true,
+   "git.codeLens.enabled": false,
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js"

@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.js';
-import generateToken from '../utils/generate.token.js';
+import generateToken, { getJwtSecret } from '../utils/generate.token.js';
 
 class AuthService {
   async register({ email, username, password }) {
@@ -13,7 +13,7 @@ class AuthService {
       throw error;
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12);
     const user = await User.create({
       email,
       username,
@@ -74,7 +74,7 @@ class AuthService {
     let payload;
 
     try {
-      payload = jwt.verify(refreshToken, process.env.JWT_SECRET || 'dev-secret');
+      payload = jwt.verify(refreshToken, getJwtSecret());
     } catch (error) {
       const jwtError = new Error('Invalid refresh token');
       jwtError.statusCode = 401;
