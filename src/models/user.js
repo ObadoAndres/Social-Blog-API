@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
@@ -23,25 +23,25 @@ const userSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
-    role:{
-      type:String,
-      enum:["admin", "user"],
-      default:"user"
-    },
-    bio:{
+    role: {
       type: String,
-      default:""
+      enum: ["admin", "user"],
+      default: "user",
     },
-    avartar:{
-      type:String,
-      default:""
-    }
+    bio: {
+      type: String,
+      default: "",
+    },
+    avartar: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
 
 export default User;
