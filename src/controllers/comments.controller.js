@@ -7,9 +7,9 @@ import asyncHandler from '../middlewares/asyncHandler.js';
 export const createCommentController = asyncHandler(async (req, res) => {
   const { postId } = req.params;
   const commentData = req.body;
-  const userId = req.user.id;
+  const currentUser = req.user;
 
-  const comment = await createComment(commentData, userId, postId);
+  const comment = await createComment(postId, commentData, currentUser);
 
   res.status(201).json({
     success: true,

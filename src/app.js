@@ -5,6 +5,7 @@ import authRoutes from './routes/auth.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import postRoutes from './routes/post.routes.js';
 import commentRoutes from "./routes/comment.routes.js"
+import followRoutes from "./routes/follow.routes.js"
 
 // 1. Initialize configuration
 dotenv.config();
@@ -20,6 +21,7 @@ app.use('/admin', adminRoutes);
 app.use('/api', authRoutes);
 app.use('/api/post', postRoutes);
 app.use("/api/comment", commentRoutes);
+app.use("/api/follow", followRoutes);
 
 // 4. Base / Health Check Route
 app.get('/', (req, res) => {

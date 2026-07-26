@@ -6,8 +6,10 @@ export const createComment = async (postId, commentData, currentUser) => {
 
   if (!post) throw new Error("No post found");
 
+  const authorId = currentUser?.id || currentUser;
+
   const comment = new Comment({
-    author: currentUser.id,
+    author: authorId,
     post: postId,
     content: commentData.content,
   });
