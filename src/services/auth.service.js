@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.js';
 import generateToken, { getJwtSecret } from '../utils/generate.token.js';
+import { sendWelcomeEmail } from './email.services.js';
 
 class AuthService {
   async register({ email, username, password }) {
@@ -26,6 +27,7 @@ class AuthService {
       });
 
       await user.save({ session });
+      await sendWelcomeEmail(user.email, user.username);
       await session.commitTransaction();
 
       return {
