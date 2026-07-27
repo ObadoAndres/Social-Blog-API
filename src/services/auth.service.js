@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.js';
@@ -5,63 +6,87 @@ import generateToken, { getJwtSecret } from '../utils/generate.token.js';
 
 class AuthService {
   async register({ email, username, password }) {
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (existingUser) {
-      const error = new Error('User already exists');
-      error.statusCode = 400;
+    try {
+      const existingUser = await User.findOne({ $or: [{ email }, { username }] }).session(session);
+
+      if (existingUser) {
+        const error = new Error('User already exists');
+        error.statusCode = 400;
+        throw error;
+      }
+
+      const hashedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12);
+      const user = new User({
+        email,
+        username,
+        password: hashedPassword,
+      });
+
+      await user.save({ session });
+      await session.commitTransaction();
+
+      return {
+        user: {
+          id: user._id,
+          email: user.email,
+          username: user.username,
+        },
+      };
+    } catch (error) {
+      await session.abortTransaction();
       throw error;
+    } finally {
+      await session.endSession();
     }
-
-    const hashedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12);
-    const user = await User.create({
-      email,
-      username,
-      password: hashedPassword,
-    });
-
-    return {
-      user: {
-        id: user._id,
-        email: user.email,
-        username: user.username,
-      },
-    };
   }
 
   async login({ email, password }) {
-    const user = await User.findOne({ email });
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (!user) {
-      const error = new Error('Invalid credentials');
-      error.statusCode = 401;
+    try {
+      const user = await User.findOne({ email }).session(session);
+
+      if (!user) {
+        const error = new Error('Invalid credentials');
+        error.statusCode = 401;
+        throw error;
+      }
+
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+
+      if (!isPasswordValid) {
+        const error = new Error('Invalid credentials');
+        error.statusCode = 401;
+        throw error;
+      }
+
+      const accessToken = generateToken({ id: user._id, email: user.email }, '15m');
+      const refreshToken = generateToken({ id: user._id, email: user.email }, '7d');
+
+      user.refreshTokens = user.refreshTokens || [];
+      user.refreshTokens.push(refreshToken);
+      await user.save({ session });
+      await session.commitTransaction();
+
+      return {
+        user: {
+          id: user._id,
+          email: user.email,
+          username: user.username,
+        },
+        accessToken,
+        refreshToken,
+      };
+    } catch (error) {
+      await session.abortTransaction();
       throw error;
+    } finally {
+      await session.endSession();
     }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (!isPasswordValid) {
-      const error = new Error('Invalid credentials');
-      error.statusCode = 401;
-      throw error;
-    }
-
-    const accessToken = generateToken({ id: user._id, email: user.email }, '15m');
-    const refreshToken = generateToken({ id: user._id, email: user.email }, '7d');
-
-    user.refreshTokens = user.refreshTokens || [];
-    user.refreshTokens.push(refreshToken);
-    await user.save();
-
-    return {
-      user: {
-        id: user._id,
-        email: user.email,
-        username: user.username,
-      },
-      accessToken,
-      refreshToken,
-    };
   }
 
   async refresh({ refreshToken }) {
@@ -81,25 +106,36 @@ class AuthService {
       throw jwtError;
     }
 
-    const user = await User.findOne({ refreshTokens: refreshToken });
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (!user) {
-      const error = new Error('Refresh token not found');
-      error.statusCode = 401;
+    try {
+      const user = await User.findOne({ refreshTokens: refreshToken }).session(session);
+
+      if (!user) {
+        const error = new Error('Refresh token not found');
+        error.statusCode = 401;
+        throw error;
+      }
+
+      const newAccessToken = generateToken({ id: user._id, email: user.email }, '15m');
+      const newRefreshToken = generateToken({ id: user._id, email: user.email }, '7d');
+
+      user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken);
+      user.refreshTokens.push(newRefreshToken);
+      await user.save({ session });
+      await session.commitTransaction();
+
+      return {
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      };
+    } catch (error) {
+      await session.abortTransaction();
       throw error;
+    } finally {
+      await session.endSession();
     }
-
-    const newAccessToken = generateToken({ id: user._id, email: user.email }, '15m');
-    const newRefreshToken = generateToken({ id: user._id, email: user.email }, '7d');
-
-    user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken);
-    user.refreshTokens.push(newRefreshToken);
-    await user.save();
-
-    return {
-      accessToken: newAccessToken,
-      refreshToken: newRefreshToken,
-    };
   }
 
   async logout({ refreshToken }) {
@@ -109,20 +145,31 @@ class AuthService {
       throw error;
     }
 
-    const user = await User.findOne({ refreshTokens: refreshToken });
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
-    if (!user) {
-      const error = new Error('Refresh token not found');
-      error.statusCode = 401;
+    try {
+      const user = await User.findOne({ refreshTokens: refreshToken }).session(session);
+
+      if (!user) {
+        const error = new Error('Refresh token not found');
+        error.statusCode = 401;
+        throw error;
+      }
+
+      user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken);
+      await user.save({ session });
+      await session.commitTransaction();
+
+      return {
+        message: 'Logged out successfully',
+      };
+    } catch (error) {
+      await session.abortTransaction();
       throw error;
+    } finally {
+      await session.endSession();
     }
-
-    user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken);
-    await user.save();
-
-    return {
-      message: 'Logged out successfully',
-    };
   }
 }
 

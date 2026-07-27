@@ -1,38 +1,47 @@
+import mongoose from "mongoose";
 import Post from "../models/post.js";
 import Comment from "../models/comments.js";
 
 export const createComment = async (postId, commentData, currentUser) => {
-  const post = await Post.findById(postId);
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-  if (!post) throw new Error("No post found");
+  try {
+    const post = await Post.findById(postId).session(session);
 
-  const authorId = currentUser?.id || currentUser;
+    if (!post) throw new Error("No post found");
 
-  const comment = new Comment({
-    author: authorId,
-    post: postId,
-    content: commentData.content,
-  });
+    const authorId = currentUser?.id || currentUser;
 
-  const savedComment = await comment.save();
+    const comment = new Comment({
+      author: authorId,
+      post: postId,
+      content: commentData.content,
+    });
 
-  post.commentsCount += 1;
+    const savedComment = await comment.save({ session });
 
-  await post.save();
+    post.commentsCount += 1;
+    await post.save({ session });
 
-  return savedComment;
+    await session.commitTransaction();
+    return savedComment;
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    await session.endSession();
+  }
 };
 
+export const getCommentsByPostId = async (postId) => {
+  const post = await Post.findById(postId);
 
-export const getCommentsByPostId = async (postId)=>{
-    const post = await Post.findById(postId)
+  if (!post) throw new Error("Post not found");
 
-    if (!post) throw new Error("Post not found");
-
-    const comments = await Comment.find({post: postId})
+  const comments = await Comment.find({ post: postId })
     .populate("author", "username")
-    .sort({createdAt : -1});
-  
-    return comments
+    .sort({ createdAt: -1 });
 
-}
+  return comments;
+};
