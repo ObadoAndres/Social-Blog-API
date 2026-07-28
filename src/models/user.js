@@ -56,7 +56,12 @@ const userSchema = new mongoose.Schema(
     verificationOtpExpiresAt: {
       type: Date,
     },
+    profileImage: {
+    url: String,
+    publicId: String
+}
   },
+
 
   {
     timestamps: true,

@@ -1,4 +1,5 @@
 import { followUser, unfollowUser } from "../services/follow.service.js";
+import asyncHandler from "../middlewares/asyncHandler.js";
 
 export const followUserController = asyncHandler(async (req, res) => {
   const { userId } = req.params; // target user ID
