@@ -1,12 +1,12 @@
 import 'dotenv/config';
 import express from 'express';
-import connectDB from './config/db.js';
-import authRoutes from './routes/auth.routes.js';
-import adminRoutes from './routes/admin.routes.js';
-import postRoutes from './routes/post.routes.js';
-import commentRoutes from "./routes/comment.routes.js"
-import followRoutes from "./routes/follow.routes.js"
-import userRoutes from "./routes/user.routes.js"
+import connectDB from './src/config/db.js';
+import authRoutes from './src/routes/auth.routes.js';
+import adminRoutes from './src/routes/admin.routes.js';
+import postRoutes from './src/routes/post.routes.js';
+import commentRoutes from './src/routes/comment.routes.js';
+import followRoutes from './src/routes/follow.routes.js';
+import userRoutes from './src/routes/user.routes.js';
 
 const app = express();
 

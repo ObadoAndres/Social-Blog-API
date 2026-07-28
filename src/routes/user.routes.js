@@ -6,4 +6,6 @@ import { uploadImage } from "../services/cloudinary.service.js";
 
 const router = express.Router();
 
-router.post("/profile-image", authMiddleware, upload.single("image"), uploadImage)
+router.post("/profile-image", authMiddleware, upload.single("image"), uploadImage);
+
+export default router;

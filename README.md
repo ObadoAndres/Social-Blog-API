@@ -20,8 +20,8 @@ A simple Node.js and Express REST API for a social blog application.
 
 ## Project Structure
 
-- `src/app.js` - app entry point
-- `src/server.js` - server startup
+- `app.js` - app entry point
+- `server.js` - server startup
 - `src/routes/` - API routes
 - `src/controllers/` - request handlers
 - `src/services/` - business logic
