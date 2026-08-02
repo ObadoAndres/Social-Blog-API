@@ -55,3 +55,11 @@ The server will start on the port specified in your `.env` file.
 ## Notes
 
 Make sure MongoDB is running and the connection URI is valid before starting the server.
+
+## Rate limiting
+
+- The API now uses a global limiter to throttle repeated traffic across the whole application.
+- Authentication routes such as login and registration use a stricter limiter to reduce brute-force attempts.
+- The limits are configurable with environment variables:
+  - RATE_LIMIT_WINDOW_MS and RATE_LIMIT_MAX for the global limiter
+  - AUTH_RATE_LIMIT_WINDOW_MS and AUTH_RATE_LIMIT_MAX for auth-specific throttling

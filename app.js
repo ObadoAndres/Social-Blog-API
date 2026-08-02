@@ -8,6 +8,7 @@ import commentRoutes from './src/routes/comment.routes.js';
 import followRoutes from './src/routes/follow.routes.js';
 import likeRoutes from './src/routes/like.routes.js';
 import userRoutes from './src/routes/user.routes.js';
+import { generalLimiter } from './src/middlewares/rateLimit.middleware.js';
 
 const app = express();
 
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 3. Application Routes
+app.use(generalLimiter);
 app.use('/admin', adminRoutes);
 app.use('/api', authRoutes);
 app.use('/api/post', postRoutes);

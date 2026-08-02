@@ -1,5 +1,6 @@
 import asyncHandler from '../middlewares/asyncHandler.js';
 import authService from '../services/auth.service.js';
+import { setAuthCookies, clearAuthCookies, getCookieValue } from '../utils/cookies.js';
 
 const register = asyncHandler(async (req, res) => {
   const result = await authService.register(req.body);
@@ -8,19 +9,22 @@ const register = asyncHandler(async (req, res) => {
 
 const login = asyncHandler(async (req, res) => {
   const result = await authService.login(req.body);
-  res.status(200).json(result);
+  setAuthCookies(res, result);
+  res.status(200).json({ user: result.user });
 });
 
 const refresh = asyncHandler(async (req, res) => {
-  const { refreshToken } = req.body;
+  const refreshToken = req.body.refreshToken || getCookieValue(req, 'refreshToken');
   const result = await authService.refresh({ refreshToken });
-  res.status(200).json(result);
+  setAuthCookies(res, { accessToken: result.accessToken, refreshToken: result.refreshToken });
+  res.status(200).json({ message: 'Token refreshed successfully' });
 });
 
 const logout = asyncHandler(async (req, res) => {
-  const { refreshToken } = req.body;
-  const result = await authService.logout({ refreshToken });
-  res.status(200).json(result);
+  const refreshToken = req.body.refreshToken || getCookieValue(req, 'refreshToken');
+  await authService.logout({ refreshToken });
+  clearAuthCookies(res);
+  res.status(200).json({ message: 'Logged out successfully' });
 });
 
 export {
