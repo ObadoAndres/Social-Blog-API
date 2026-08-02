@@ -1,15 +1,29 @@
-import dotenv from "dotenv";
-import nodemailer from "nodemailer";
+import dotenv from 'dotenv';
+import { MailerSend, EmailParams, Recipient, Sender } from 'mailersend';
 
 dotenv.config();
 
-// Reusable transporter
-export const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: Number(process.env.SMTP_PORT) || 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
+const mailersend = new MailerSend({
+  apiKey: process.env.MAILERSEND_API_KEY,
 });
+
+const getFromAddress = () => ({
+  email: process.env.MAILERSEND_FROM_EMAIL || 'no-reply@socialblog.com',
+  name: process.env.MAILERSEND_FROM_NAME || 'Social Blog',
+});
+
+const buildEmailParams = ({ to, subject, text, html }) => {
+  const { email, name } = getFromAddress();
+  const sender = new Sender(email, name);
+  const recipient = new Recipient(to, to);
+
+  return new EmailParams()
+    .setFrom(sender)
+    .setTo([recipient])
+    .setReplyTo(sender)
+    .setSubject(subject)
+    .setText(text)
+    .setHtml(html);
+};
+
+export { buildEmailParams, getFromAddress, mailersend };
