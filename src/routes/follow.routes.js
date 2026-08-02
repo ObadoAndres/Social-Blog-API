@@ -7,10 +7,9 @@ import { authMiddleware } from "../middlewares/auth.middleware.js";
 
 const router = express.Router({ mergeParams: true });
 
-// POST /api/users/:userId/follow
 router.post("/", authMiddleware, followUserController);
-
-// DELETE /api/users/:userId/follow
+router.post("/:userId", authMiddleware, followUserController);
 router.delete("/", authMiddleware, unfollowUserController);
+router.delete("/:userId", authMiddleware, unfollowUserController);
 
 export default router;

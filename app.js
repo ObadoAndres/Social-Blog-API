@@ -6,6 +6,7 @@ import adminRoutes from './src/routes/admin.routes.js';
 import postRoutes from './src/routes/post.routes.js';
 import commentRoutes from './src/routes/comment.routes.js';
 import followRoutes from './src/routes/follow.routes.js';
+import likeRoutes from './src/routes/like.routes.js';
 import userRoutes from './src/routes/user.routes.js';
 
 const app = express();
@@ -18,13 +19,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/admin', adminRoutes);
 app.use('/api', authRoutes);
 app.use('/api/post', postRoutes);
-app.use("/api/comment", commentRoutes);
-app.use("/api/follow", followRoutes);
-app.use("/api/users", userRoutes);
+app.use('/api/comment', commentRoutes);
+app.use('/api/follow', followRoutes);
+app.use('/api/like', likeRoutes);
+app.use('/api/users', userRoutes);
 
 // 4. Base / Health Check Route
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the social blog API' });
+});
+
+app.use((err, req, res, next) => {
+  const statusCode = err.statusCode || 500;
+  const message = err.message || 'Internal server error';
+  res.status(statusCode).json({ success: false, message });
 });
 
 // 5. Database Connection Wrapper

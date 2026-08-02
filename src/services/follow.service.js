@@ -3,12 +3,16 @@ import User from "../models/user.js";
 
 export const followUser = async (targetUserId, currentUser) => {
   if (currentUser.id === targetUserId) {
-    throw new Error("You cannot follow yourself");
+    const error = new Error("You cannot follow yourself");
+    error.statusCode = 400;
+    throw error;
   }
 
   const targetUser = await User.findById(targetUserId);
   if (!targetUser) {
-    throw new Error("User not found");
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
   }
 
   const existingFollow = await Follow.findOne({
@@ -17,7 +21,9 @@ export const followUser = async (targetUserId, currentUser) => {
   });
 
   if (existingFollow) {
-    throw new Error("You are already following this user");
+    const error = new Error("You are already following this user");
+    error.statusCode = 409;
+    throw error;
   }
 
   const follow = new Follow({
@@ -26,28 +32,33 @@ export const followUser = async (targetUserId, currentUser) => {
   });
   await follow.save();
 
-  currentUser.followingCount += 1;
+  const currentUserDoc = await User.findById(currentUser.id);
+  currentUserDoc.followingCount += 1;
   targetUser.followersCount += 1;
 
-  await currentUser.save();
+  await currentUserDoc.save();
   await targetUser.save();
 
   return {
     message: "User followed successfully",
     following: true,
     followersCount: targetUser.followersCount,
-    followingCount: currentUser.followingCount,
+    followingCount: currentUserDoc.followingCount,
   };
 };
 
 export const unfollowUser = async (targetUserId, currentUser) => {
   if (targetUserId === currentUser.id) {
-    throw new Error(" You can not unfollow yourself");
+    const error = new Error("You cannot unfollow yourself");
+    error.statusCode = 400;
+    throw error;
   }
 
   const targetUser = await User.findById(targetUserId);
   if (!targetUser) {
-    throw new Error("User not found");
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
   }
 
   const existingFollow = await Follow.findOne({
@@ -56,21 +67,24 @@ export const unfollowUser = async (targetUserId, currentUser) => {
   });
 
   if (!existingFollow) {
-    throw new Error("You have not followed this user");
+    const error = new Error("You have not followed this user");
+    error.statusCode = 404;
+    throw error;
   }
 
   await existingFollow.deleteOne();
 
-  currentUser.followingCount -= 1;
+  const currentUserDoc = await User.findById(currentUser.id);
+  currentUserDoc.followingCount -= 1;
   targetUser.followersCount -= 1;
 
-  await currentUser.save();
+  await currentUserDoc.save();
   await targetUser.save();
 
   return {
     message: "User unfollowed successfully",
     following: false,
     followersCount: targetUser.followersCount,
-    followingCount: currentUser.followingCount,
+    followingCount: currentUserDoc.followingCount,
   };
 };

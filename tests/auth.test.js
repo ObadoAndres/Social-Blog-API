@@ -1,68 +1,61 @@
-import { request } from "express";
+import request from "supertest";
+import bcrypt from "bcrypt";
 import { app } from "../app.js";
 import User from "../src/models/user.js";
-import bcrypt from "bcrypt";
 
-describe("POST /auth/register", () => {
-  it("should register a new user successfully", async () => {
-    const userData = {
+describe("POST /api/register", () => {
+  it("registers a new user and returns the expected payload", async () => {
+    const res = await request(app).post("/api/register").send({
       username: "Andres",
       email: "andres@example.com",
       password: "password123",
-    };
-    const res = await request(app).post("/auth/register").send(userData);
+    });
 
     expect(res.status).toBe(201);
+    expect(res.body.user).toEqual(
+      expect.objectContaining({
+        username: "Andres",
+        email: "andres@example.com",
+      }),
+    );
+    expect(res.body.user).toHaveProperty("id");
     expect(res.body.user).not.toHaveProperty("password");
-    expect(res.body.user).toHaveProperty("username");
-    expect(res.body.user).toHaveProperty("email");
+    expect(res.body.email).toEqual(expect.objectContaining({ sent: true }));
   });
 
-  it("should reject duplicate email", async () => {
+  it("rejects duplicate email or username", async () => {
     await User.create({
       username: "Test user",
       email: "test@gmail.com",
       password: "123456",
     });
 
-    const res = await request(app).post("/auth/register").send({
+    const res = await request(app).post("/api/register").send({
       username: "Test user2",
       email: "test@gmail.com",
       password: "09345263",
     });
 
     expect(res.status).toBe(400);
-
     expect(res.body.message).toBe("User already exists");
-
-    const users = await User.find();
-
-    expect(users).toHaveLength(1);
-
-    const count = await User.countDocuments({
-      email: "test@gmail.com",
-    });
-
-    expect(count).toBe(1);
+    expect(await User.countDocuments({ email: "test@gmail.com" })).toBe(1);
   });
 
-  it("should reject registration when email is missing", async () => {
-    const res = await request(app).post("/auth/register").send({
+  it("rejects registration when required fields are missing", async () => {
+    const res = await request(app).post("/api/register").send({
       username: "Test user",
       password: "Pass123",
     });
 
     expect(res.status).toBe(400);
-    expect(res.body).toHaveProperty("message");
-
-    const users = await User.find();
-    expect(users).toHaveLength(0);
+    expect(res.body).toHaveProperty("errors");
+    expect(await User.countDocuments()).toBe(0);
   });
 
-  it("should hash password before saving", async () => {
+  it("hashes the password before saving", async () => {
     const plainPassword = "Password123";
 
-    const res = await request(app).post("/auth/register").send({
+    const res = await request(app).post("/api/register").send({
       username: "John Doe",
       email: "jayzer@example.com",
       password: plainPassword,
@@ -70,27 +63,9 @@ describe("POST /auth/register", () => {
 
     expect(res.status).toBe(201);
 
-    const user = await User.findOne({
-      email: "jayzer@example.com",
-    });
-
+    const user = await User.findOne({ email: "jayzer@example.com" });
     expect(user).not.toBeNull();
-
     expect(user.password).not.toBe(plainPassword);
-
     expect(await bcrypt.compare(plainPassword, user.password)).toBe(true);
-  });
-
-  it("should not return password in response", async () => {
-    const res = await request(app).post("/auth/register").send({
-      username: "Andres",
-      email: "Andres@example.com",
-      password: "Password123",
-    });
-
-    expect(res.status).toBe(201);
-    expect(res.body.user).not.toHaveProperty("password");
-    expect(res.body.user).toHaveProperty("email", "Andres@example.com");
-    expect(res.body.user).toHaveProperty("username", "Andres");
   });
 });

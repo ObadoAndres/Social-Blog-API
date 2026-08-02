@@ -4,7 +4,9 @@ import Post from "../models/post.js";
 export const likePost = async (postId, currentUser) => {
   const post = await Post.findById(postId);
   if (!post) {
-    throw new Error("Post not found");
+    const error = new Error("Post not found");
+    error.statusCode = 404;
+    throw error;
   }
 
   const existingLike = await Like.findOne({
@@ -12,7 +14,9 @@ export const likePost = async (postId, currentUser) => {
     post: postId,
   });
   if (existingLike) {
-    throw new Error("User has already liked this post");
+    const error = new Error("User has already liked this post");
+    error.statusCode = 409;
+    throw error;
   }
 
   const like = new Like({
@@ -34,7 +38,9 @@ export const unlikePost = async (postId, currentUser) => {
   const post = await Post.findById(postId);
 
   if (!post) {
-    throw new Error("No post found");
+    const error = new Error("Post not found");
+    error.statusCode = 404;
+    throw error;
   }
 
   const like = await Like.findOne({
@@ -42,7 +48,9 @@ export const unlikePost = async (postId, currentUser) => {
     post: postId,
   });
   if (!like) {
-    throw new Error("You have not liked this post");
+    const error = new Error("You have not liked this post");
+    error.statusCode = 404;
+    throw error;
   }
 
   await like.deleteOne();

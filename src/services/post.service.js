@@ -23,7 +23,9 @@ export const getPosts = async (page = 1, limit = 10) => {
 export const getPostById = async (postId) => {
   const post = await Post.findById(postId).populate("author", "username");
   if (!post) {
-    throw new Error("Post not found");
+    const error = new Error("Post not found");
+    error.statusCode = 404;
+    throw error;
   }
   return post;
 };
@@ -31,11 +33,15 @@ export const getPostById = async (postId) => {
 export const updatePost = async (postId, updateData, currentUser) => {
   const post = await Post.findById(postId);
   if (!post) {
-    throw new Error("Post not found");
+    const error = new Error("Post not found");
+    error.statusCode = 404;
+    throw error;
   }
 
   if (post.author.toString() !== currentUser.id && currentUser.role !== "admin") {
-    throw new Error("Not authorized to update this post");
+    const error = new Error("Not authorized to update this post");
+    error.statusCode = 403;
+    throw error;
   }
 
   if (updateData.title !== undefined) {
@@ -52,11 +58,15 @@ export const updatePost = async (postId, updateData, currentUser) => {
 export const deletePost = async (postId, currentUser) => {
   const post = await Post.findById(postId);
   if (!post) {
-    throw new Error("Post not found");
+    const error = new Error("Post not found");
+    error.statusCode = 404;
+    throw error;
   }
 
   if (post.author.toString() !== currentUser.id && currentUser.role !== "admin") {
-    throw new Error("Not authorized to delete this post");
+    const error = new Error("Not authorized to delete this post");
+    error.statusCode = 403;
+    throw error;
   }
 
   await post.deleteOne();

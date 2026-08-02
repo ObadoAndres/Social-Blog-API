@@ -1,3 +1,4 @@
+import asyncHandler from "../middlewares/asyncHandler.js";
 import { likePost, unlikePost } from "../services/like.services.js";
 
 export const likePostController = asyncHandler(async (req, res) => {

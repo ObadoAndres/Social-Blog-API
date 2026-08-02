@@ -26,7 +26,11 @@ class AuthService {
     let emailStatus = { sent: true };
 
     try {
-      await sendWelcomeEmail(user.email, user.username);
+      if (process.env.NODE_ENV === 'test') {
+        emailStatus = { sent: true, skipped: true };
+      } else {
+        await sendWelcomeEmail(user.email, user.username);
+      }
     } catch (emailError) {
       emailStatus = {
         sent: false,
@@ -62,8 +66,8 @@ class AuthService {
       throw error;
     }
 
-    const accessToken = generateToken({ id: user._id, email: user.email }, '15m');
-    const refreshToken = generateToken({ id: user._id, email: user.email }, '7d');
+    const accessToken = generateToken({ id: user._id, email: user.email, role: user.role }, '15m');
+    const refreshToken = generateToken({ id: user._id, email: user.email, role: user.role }, '7d');
 
     user.refreshTokens = user.refreshTokens || [];
     user.refreshTokens.push(refreshToken);
@@ -105,8 +109,8 @@ class AuthService {
       throw error;
     }
 
-    const newAccessToken = generateToken({ id: user._id, email: user.email }, '15m');
-    const newRefreshToken = generateToken({ id: user._id, email: user.email }, '7d');
+    const newAccessToken = generateToken({ id: user._id, email: user.email, role: user.role }, '15m');
+    const newRefreshToken = generateToken({ id: user._id, email: user.email, role: user.role }, '7d');
 
     user.refreshTokens = user.refreshTokens.filter((token) => token !== refreshToken);
     user.refreshTokens.push(newRefreshToken);

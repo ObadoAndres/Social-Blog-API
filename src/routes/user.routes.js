@@ -1,11 +1,10 @@
-import express from "express"
+import express from "express";
 import { authMiddleware } from "../middlewares/auth.middleware.js";
-import { upload } from "../middlewares/upload.middleware.js";
-import { uploadImage } from "../services/cloudinary.service.js";
-
+import { uploadImageMiddleware } from "../middlewares/upload.middleware.js";
+import { uploadProfileImage } from "../controllers/user.controller.js";
 
 const router = express.Router();
 
-router.post("/profile-image", authMiddleware, upload.single("image"), uploadImage);
+router.post("/profile-image", authMiddleware, uploadImageMiddleware, uploadProfileImage);
 
 export default router;

@@ -12,6 +12,7 @@ export const updateProfileImage = async (userId, file) => {
   if (!user) {
     throw new Error("User not found");
   }
+  user.profileImage = user.profileImage || {};
   const oldPublicId = user.profileImage.publicId;
 
   // uploading image
