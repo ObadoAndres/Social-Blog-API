@@ -9,6 +9,7 @@ import followRoutes from './src/routes/follow.routes.js';
 import likeRoutes from './src/routes/like.routes.js';
 import userRoutes from './src/routes/user.routes.js';
 import { generalLimiter } from './src/middlewares/rateLimit.middleware.js';
+import redisClient, { connectRedis } from './src/config/redis.js';
 
 const app = express();
 
@@ -40,7 +41,17 @@ app.use((err, req, res, next) => {
 // 5. Database Connection Wrapper
 const startApp = async () => {
   await connectDB();
+
+  try {
+    await connectRedis();
+    await redisClient.set('name', 'Andres');
+    const value = await redisClient.get('name');
+    console.log(value);
+  } catch (error) {
+    console.warn('Redis connection failed; continuing without Redis:', error.message);
+  }
 };
+
 
 export { app, startApp };
 export default startApp;
