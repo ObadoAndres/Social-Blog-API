@@ -1,12 +1,7 @@
-import { buildEmailParams, mailersend } from "../config/email.js";
+import { sendMail } from "../config/email.js";
 
-const sendMailWithMailerSend = async ({ to, subject, text, html }) => {
-  if (!process.env.MAILERSEND_API_KEY) {
-    throw new Error("MAILERSEND_API_KEY is not configured");
-  }
-
-  const emailParams = buildEmailParams({ to, subject, text, html });
-  return mailersend.email.send(emailParams);
+const sendMailWithMailtrap = async ({ to, subject, text, html }) => {
+  return sendMail({ to, subject, text, html });
 };
 
 export const sendVerificationEmail = async (email, otp) => {
@@ -32,7 +27,7 @@ export const sendVerificationEmail = async (email, otp) => {
       </div>
     `;
 
-    return sendMailWithMailerSend({ to: email, subject, text, html });
+    return sendMailWithMailtrap({ to: email, subject, text, html });
   } catch (error) {
     throw new Error("Failed to send verification email: " + error.message);
   }
@@ -61,7 +56,7 @@ export const sendWelcomeEmail = async (email, username) => {
       </div>
     `;
 
-    return sendMailWithMailerSend({ to: email, subject, text, html });
+    return sendMailWithMailtrap({ to: email, subject, text, html });
   } catch (error) {
     throw new Error("Failed to send welcome email: " + error.message);
   }

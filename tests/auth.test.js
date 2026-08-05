@@ -49,6 +49,21 @@ describe("POST /api/register", () => {
     expect(res.body.email).toEqual(expect.objectContaining({ sent: true }));
   });
 
+  it("creates a verification token during registration", async () => {
+    const res = await request(app).post("/api/register").send({
+      username: "Otp User",
+      email: "otp@example.com",
+      password: "password123",
+    });
+
+    expect(res.status).toBe(201);
+
+    const user = await User.findOne({ email: "otp@example.com" });
+    expect(user).not.toBeNull();
+    expect(user.verificationOtp).toBeTruthy();
+    expect(user.verificationOtpExpiresAt).toBeInstanceOf(Date);
+  });
+
   it("stores auth tokens in HttpOnly secure cookies on login", async () => {
     process.env.COOKIE_SECURE = "true";
 

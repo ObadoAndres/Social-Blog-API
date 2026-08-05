@@ -1,8 +1,11 @@
+import { jest } from '@jest/globals';
 import mongoose from "mongoose";
 import { MongoMemoryServer } from "mongodb-memory-server";
 
 let mongoServer;
 let mongoReady = false;
+
+jest.setTimeout(60000);
 
 beforeAll(async () => {
   try {

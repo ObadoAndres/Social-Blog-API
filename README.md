@@ -42,7 +42,15 @@ npm install
 PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_secret_key
+MAILTRAP_HOST=sandbox.smtp.mailtrap.io
+MAILTRAP_PORT=2525
+MAILTRAP_USER=your_mailtrap_username
+MAILTRAP_PASS=your_mailtrap_password
+MAILTRAP_FROM_EMAIL=no-reply@yourdomain.com
+MAILTRAP_FROM_NAME=Social Blog
 ```
+
+Use your Mailtrap inbox credentials and a sender address that matches your configured domain.
 
 ## Run the Application
 

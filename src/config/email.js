@@ -1,29 +1,64 @@
 import dotenv from 'dotenv';
-import { MailerSend, EmailParams, Recipient, Sender } from 'mailersend';
+import nodemailer from 'nodemailer';
 
 dotenv.config();
 
-const mailersend = new MailerSend({
-  apiKey: process.env.MAILERSEND_API_KEY,
-});
+const createTransporter = () => {
+  const host = process.env.MAILTRAP_HOST || 'sandbox.smtp.mailtrap.io';
+  const port = Number(process.env.MAILTRAP_PORT || 2525);
+  const user = process.env.MAILTRAP_USER;
+  const pass = process.env.MAILTRAP_PASS;
 
-const getFromAddress = () => ({
-  email: process.env.MAILERSEND_FROM_EMAIL || 'no-reply@socialblog.com',
-  name: process.env.MAILERSEND_FROM_NAME || 'Social Blog',
-});
+  if (!user || !pass) {
+    throw new Error('MAILTRAP_USER and MAILTRAP_PASS must be configured');
+  }
 
-const buildEmailParams = ({ to, subject, text, html }) => {
-  const { email, name } = getFromAddress();
-  const sender = new Sender(email, name);
-  const recipient = new Recipient(to, to);
-
-  return new EmailParams()
-    .setFrom(sender)
-    .setTo([recipient])
-    .setReplyTo(sender)
-    .setSubject(subject)
-    .setText(text)
-    .setHtml(html);
+  return nodemailer.createTransport({
+    host,
+    port,
+    secure: false,
+    auth: {
+      user,
+      pass,
+    },
+  });
 };
 
-export { buildEmailParams, getFromAddress, mailersend };
+const getFromAddress = () => {
+  const configuredEmail = process.env.MAILTRAP_FROM_EMAIL?.trim();
+  const configuredName = process.env.MAILTRAP_FROM_NAME?.trim() || 'Social Blog';
+
+  if (!configuredEmail) {
+    throw new Error('MAILTRAP_FROM_EMAIL must be configured with a real sender address');
+  }
+
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/i;
+  if (!emailPattern.test(configuredEmail)) {
+    throw new Error('MAILTRAP_FROM_EMAIL must be a valid email address');
+  }
+
+  return {
+    email: configuredEmail,
+    name: configuredName,
+  };
+};
+
+const buildMailOptions = ({ to, subject, text, html }) => {
+  const { email, name } = getFromAddress();
+
+  return {
+    from: `${name} <${email}>`,
+    to,
+    subject,
+    text,
+    html,
+  };
+};
+
+const sendMail = async ({ to, subject, text, html }) => {
+  const transporter = createTransporter();
+  const mailOptions = buildMailOptions({ to, subject, text, html });
+  return transporter.sendMail(mailOptions);
+};
+
+export { buildMailOptions, getFromAddress, sendMail };

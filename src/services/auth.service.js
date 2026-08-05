@@ -2,7 +2,8 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.js';
 import generateToken, { getJwtSecret } from '../utils/generate.token.js';
-import { sendWelcomeEmail } from './email.services.js';
+import { generateOtp } from '../utils/generate.otp.js';
+import { sendVerificationEmail } from './email.services.js';
 
 class AuthService {
   async register({ email, username, password }) {
@@ -15,10 +16,13 @@ class AuthService {
     }
 
     const hashedPassword = await bcrypt.hash(password, parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12);
+    const verificationOtp = generateOtp();
     const user = new User({
       email,
       username,
       password: hashedPassword,
+      verificationOtp,
+      verificationOtpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
     });
 
     await user.save();
@@ -29,14 +33,14 @@ class AuthService {
       if (process.env.NODE_ENV === 'test') {
         emailStatus = { sent: true, skipped: true };
       } else {
-        await sendWelcomeEmail(user.email, user.username);
+        await sendVerificationEmail(user.email, verificationOtp);
       }
     } catch (emailError) {
       emailStatus = {
         sent: false,
         error: emailError.message,
       };
-      console.error('Failed to send welcome email:', emailError.message);
+      console.error('Failed to send verification email:', emailError.message);
     }
 
     return {
