@@ -26,7 +26,7 @@ describe("Follows API", () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.follower).toMatchObject({ username: user.username });
-    expect(res.body.following).toMatchObject({ username: target.username });
+    expect(res.body.followingUser).toMatchObject({ username: target.username });
     expect(await Follow.countDocuments()).toBe(1);
 
     const updatedUser = await User.findById(user._id);

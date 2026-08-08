@@ -11,6 +11,21 @@ const adminDashboard = (req, res) => {
     });
 };
 
+/**
+ * @swagger
+ * /admin/dashboard:
+ *   get:
+ *     summary: Admin dashboard
+ *     tags:
+ *       - Admin
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Welcome message for admin users
+ *       403:
+ *         description: Forbidden
+ */
 router.get(
     "/dashboard",
     authMiddleware,

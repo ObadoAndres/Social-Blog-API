@@ -10,14 +10,14 @@ import likeRoutes from './src/routes/like.routes.js';
 import userRoutes from './src/routes/user.routes.js';
 import { generalLimiter } from './src/middlewares/rateLimit.middleware.js';
 import redisClient, { connectRedis } from './src/config/redis.js';
+import swaggerUi from "swagger-ui-express";
+import swaggerSpec from "./src/config/swagger.js";
 
 const app = express();
 
-// 2. Global Parsers (Must run before any routes)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// 3. Application Routes
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use(generalLimiter);
 app.use('/admin', adminRoutes);
 app.use('/api', authRoutes);
@@ -27,7 +27,19 @@ app.use('/api/follow', followRoutes);
 app.use('/api/like', likeRoutes);
 app.use('/api/users', userRoutes);
 
-// 4. Base / Health Check Route
+
+
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: Get API welcome message
+ *     tags:
+ *       - General
+ *     responses:
+ *       200:
+ *         description: API is running
+ */
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to the social blog API' });
 });
@@ -38,18 +50,16 @@ app.use((err, req, res, next) => {
   res.status(statusCode).json({ success: false, message });
 });
 
-// 5. Database Connection Wrapper
 const startApp = async () => {
-  await connectDB();
-
-  try {
-    await connectRedis();
-    await redisClient.set('name', 'Andres');
-    const value = await redisClient.get('name');
-    console.log(value);
-  } catch (error) {
-    console.warn('Redis connection failed; continuing without Redis:', error.message);
-  }
+ try {
+  await connectRedis();
+  console.log("Redis connected successfully");
+} catch (error) {
+  console.warn(
+    "Redis connection failed; continuing without Redis:",
+    error.message
+  );
+}
 };
 
 
