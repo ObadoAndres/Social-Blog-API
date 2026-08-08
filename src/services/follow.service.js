@@ -42,6 +42,8 @@ export const followUser = async (targetUserId, currentUser) => {
   return {
     message: "User followed successfully",
     following: true,
+    follower: { username: currentUserDoc.username },
+    following: { username: targetUser.username },
     followersCount: targetUser.followersCount,
     followingCount: currentUserDoc.followingCount,
   };
@@ -84,6 +86,8 @@ export const unfollowUser = async (targetUserId, currentUser) => {
   return {
     message: "User unfollowed successfully",
     following: false,
+    follower: { username: currentUserDoc.username },
+    following: { username: targetUser.username },
     followersCount: targetUser.followersCount,
     followingCount: currentUserDoc.followingCount,
   };

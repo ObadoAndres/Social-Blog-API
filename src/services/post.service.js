@@ -8,7 +8,7 @@ export const createPost = async (postData, userId) => {
   });
 
   const savedPost = await post.save();
-  return savedPost;
+  return savedPost.populate("author", "username");
 };
 
 export const getPosts = async (page = 1, limit = 10) => {
@@ -33,7 +33,7 @@ export const getPostById = async (postId) => {
 
   console.log("Cache Miss");
 
-  const post = await Post.findById(postId);
+  const post = await Post.findById(postId).populate("author", "username");
 
   if (!post) {
     throw new Error("Post not found");
@@ -70,7 +70,7 @@ export const updatePost = async (postId, updateData, currentUser) => {
   }
 
   const updatedPost = await post.save();
-  return updatedPost;
+  return updatedPost.populate("author", "username");
 };
 
 export const deletePost = async (postId, currentUser) => {

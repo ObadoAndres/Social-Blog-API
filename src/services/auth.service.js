@@ -4,6 +4,7 @@ import User from '../models/user.js';
 import generateToken, { getJwtSecret } from '../utils/generate.token.js';
 import { generateOtp } from '../utils/generate.otp.js';
 import { sendVerificationEmail } from './email.services.js';
+import { emailQueue } from '../queues/email.queue.js';
 
 class AuthService {
   async register({ email, username, password }) {
@@ -33,7 +34,11 @@ class AuthService {
       if (process.env.NODE_ENV === 'test') {
         emailStatus = { sent: true, skipped: true };
       } else {
-        await sendVerificationEmail(user.email, verificationOtp);
+       await emailQueue.add('sendVerificationEmail', {
+          email: user.email,
+          username: user.username,
+          otp: verificationOtp,
+        });
       }
     } catch (emailError) {
       emailStatus = {

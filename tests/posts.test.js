@@ -31,6 +31,21 @@ describe("Posts API", () => {
     expect(await Post.countDocuments()).toBe(1);
   });
 
+  it("returns the author with a real username on create", async () => {
+    const { user, headers } = await buildAuthHeaders();
+
+    const res = await request(app).post("/api/post").set(headers).send({
+      title: "Named author",
+      content: "Author should be populated",
+    });
+
+    expect(res.status).toBe(201);
+    expect(res.body.data.author).toMatchObject({
+      _id: user._id.toString(),
+      username: user.username,
+    });
+  });
+
   it("rejects a post with missing title", async () => {
     const { headers } = await buildAuthHeaders();
 

@@ -26,6 +26,78 @@ describe("Likes API", () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.likesCount).toBe(1);
+    expect(res.body.user).toMatchObject({
+      username: user.username,
+    });
     expect(await Like.countDocuments()).toBe(1);
+  });
+
+  it("cannot like twice", async () => {
+    const { user, headers } = await buildAuthHeaders();
+    const post = await Post.create({ author: user._id, title: "Double like", content: "Body" });
+    await Like.create({ user: user._id, post: post._id });
+
+    const res = await request(app).post(`/api/like/${post._id}`).set(headers);
+
+    expect(res.status).toBe(409);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("User has already liked this post");
+    expect(await Like.countDocuments()).toBe(1);
+  });
+
+  it("unlikes a post successfully", async () => {
+    const { user, headers } = await buildAuthHeaders();
+    const post = await Post.create({ author: user._id, title: "Unlike me", content: "Body" });
+    await Like.create({ user: user._id, post: post._id });
+
+    const res = await request(app).delete(`/api/like/${post._id}`).set(headers);
+
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    expect(res.body.likesCount).toBe(0);
+    expect(await Like.countDocuments()).toBe(0);
+  });
+
+  it("cannot unlike if never liked", async () => {
+    const { user, headers } = await buildAuthHeaders();
+    const post = await Post.create({ author: user._id, title: "Never liked", content: "Body" });
+
+    const res = await request(app).delete(`/api/like/${post._id}`).set(headers);
+
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("You have not liked this post");
+  });
+
+  it("returns 404 when liking a non-existing post", async () => {
+    const { headers } = await buildAuthHeaders();
+    const missingPostId = "507f1f77bcf86cd799439011";
+
+    const res = await request(app).post(`/api/like/${missingPostId}`).set(headers);
+
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Post not found");
+  });
+
+  it("returns 404 when unliking a non-existing post", async () => {
+    const { headers } = await buildAuthHeaders();
+    const missingPostId = "507f1f77bcf86cd799439012";
+
+    const res = await request(app).delete(`/api/like/${missingPostId}`).set(headers);
+
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+    expect(res.body.message).toBe("Post not found");
+  });
+
+  it("rejects an unauthorized like request", async () => {
+    const { user } = await buildAuthHeaders();
+    const post = await Post.create({ author: user._id, title: "Unauthorized", content: "Body" });
+
+    const res = await request(app).post(`/api/like/${post._id}`);
+
+    expect(res.status).toBe(401);
+    expect(res.body.message).toBe("Access token required");
   });
 });

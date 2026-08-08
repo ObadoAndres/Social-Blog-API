@@ -1,5 +1,6 @@
 import Like from "../models/like.js";
 import Post from "../models/post.js";
+import User from "../models/user.js";
 
 export const likePost = async (postId, currentUser) => {
   const post = await Post.findById(postId);
@@ -25,12 +26,15 @@ export const likePost = async (postId, currentUser) => {
   });
   await like.save();
 
-  post.likesCount += 1;
+  post.likesCount = Math.max(0, (post.likesCount || 0) + 1);
   await post.save();
+
+  const userDoc = await User.findById(currentUser.id).select("username");
 
   return {
     message: "Post liked successfully",
     likesCount: post.likesCount,
+    user: userDoc ? { username: userDoc.username } : { username: currentUser.id },
   };
 };
 
@@ -55,11 +59,14 @@ export const unlikePost = async (postId, currentUser) => {
 
   await like.deleteOne();
 
-  post.likesCount -= 1;
+  post.likesCount = Math.max(0, (post.likesCount || 0) - 1);
   await post.save();
+
+  const userDoc = await User.findById(currentUser.id).select("username");
 
   return {
     message: "Like deleted successfully",
     likesCount: post.likesCount,
+    user: userDoc ? { username: userDoc.username } : { username: currentUser.id },
   };
 };

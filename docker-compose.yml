@@ -18,6 +18,20 @@ services:
       - .:/app
     command: npm run dev
 
+  worker:
+    build: .
+    container_name: social-worker
+    env_file:
+      - .env.docker
+    environment:
+      NODE_ENV: development
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - redis
+    volumes:
+      - .:/app
+    command: npm run worker
+
   mongodb:
     image: mongo:8
     container_name: social-mongodb
