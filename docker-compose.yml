@@ -9,11 +9,8 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3000
-      MONGO_URI: mongodb://mongodb:27017/social-blog
-      REDIS_URL: redis://redis:6379
     depends_on:
       - mongodb
-      - redis
     volumes:
       - .:/app
     command: npm run dev
@@ -25,12 +22,15 @@ services:
       - .env.docker
     environment:
       NODE_ENV: development
-      REDIS_URL: redis://redis:6379
-    depends_on:
-      - redis
     volumes:
       - .:/app
     command: npm run worker
+
+  redis:
+    image: redis:7-alpine
+    container_name: social-redis
+    ports:
+      - "6379:6379"
 
   mongodb:
     image: mongo:8
@@ -39,12 +39,6 @@ services:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
-
-  redis:
-    image: redis:7-alpine
-    container_name: social-redis
-    ports:
-      - "6379:6379"
 
 volumes:
   mongo_data:

@@ -51,15 +51,17 @@ app.use((err, req, res, next) => {
 });
 
 const startApp = async () => {
- try {
-  await connectRedis();
-  console.log("Redis connected successfully");
-} catch (error) {
-  console.warn(
-    "Redis connection failed; continuing without Redis:",
-    error.message
-  );
-}
+  await connectDB();
+
+  try {
+    await connectRedis();
+    console.log("Redis connected successfully");
+  } catch (error) {
+    console.warn(
+      "Redis connection failed; continuing without Redis:",
+      error.message
+    );
+  }
 };
 
 
