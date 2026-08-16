@@ -1,7 +1,10 @@
 services:
   api:
-    build: .
+    build:
+      context: .
+      dockerfile: dockerfile
     container_name: social-api
+    restart: unless-stopped
     ports:
       - "3000:3000"
     env_file:
@@ -9,36 +12,21 @@ services:
     environment:
       NODE_ENV: development
       PORT: 3000
-    depends_on:
-      - mongodb
-    volumes:
-      - .:/app
-    command: npm run dev
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:3000/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   worker:
-    build: .
+    build:
+      context: .
+      dockerfile: dockerfile
     container_name: social-worker
+    restart: unless-stopped
     env_file:
       - .env.docker
     environment:
       NODE_ENV: development
-    volumes:
-      - .:/app
-    command: npm run worker
-
-  redis:
-    image: redis:7-alpine
-    container_name: social-redis
-    ports:
-      - "6379:6379"
-
-  mongodb:
-    image: mongo:8
-    container_name: social-mongodb
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo_data:/data/db
-
-volumes:
-  mongo_data:
+    command: ["npm", "run", "worker"]

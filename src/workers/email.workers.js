@@ -17,7 +17,7 @@ const emailWorker = new Worker(
   "emailQueue",
   async (job) => {
     console.log(`Processing job: ${job.name}`);
-12
+
     switch (job.name) {
       case "sendVerificationEmail":
         await sendVerificationEmail(
