@@ -11,7 +11,7 @@ const redisConnection = process.env.REDIS_URL
       port: Number(process.env.REDIS_PORT || 6379),
     };
 
-console.log('BullMQ Redis connection:', redisConnection);
+console.log("BullMQ worker starting...");
 
 const emailWorker = new Worker(
   "emailQueue",
